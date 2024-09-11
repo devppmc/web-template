@@ -9,6 +9,7 @@ import { useIntl } from '../../util/reactIntl';
 import {
   NO_ACCESS_PAGE_POST_LISTINGS,
   NO_ACCESS_PAGE_USER_PENDING_APPROVAL,
+  NO_ACCESS_PAGE_VIEW_LISTINGS,
 } from '../../util/urlHelpers';
 import { isScrollingDisabled } from '../../ducks/ui.duck';
 
@@ -37,6 +38,7 @@ export const NoAccessPageComponent = props => {
   const missingAccessRight = pathParams?.missingAccessRight;
   const isUserPendingApprovalPage = missingAccessRight === NO_ACCESS_PAGE_USER_PENDING_APPROVAL;
   const isPostingRightsPage = missingAccessRight === NO_ACCESS_PAGE_POST_LISTINGS;
+  const isViewingRightsPage = missingAccessRight === NO_ACCESS_PAGE_VIEW_LISTINGS;
 
   const messages = isUserPendingApprovalPage
     ? {
@@ -49,6 +51,12 @@ export const NoAccessPageComponent = props => {
         schemaTitle: 'NoAccessPage.postListings.schemaTitle',
         heading: 'NoAccessPage.postListings.heading',
         content: 'NoAccessPage.postListings.content',
+      }
+    : isViewingRightsPage
+    ? {
+        schemaTitle: 'NoAccessPage.viewListings.schemaTitle',
+        heading: 'NoAccessPage.viewListings.heading',
+        content: 'NoAccessPage.viewListings.content',
       }
     : {};
 

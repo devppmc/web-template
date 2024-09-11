@@ -167,3 +167,21 @@ export const isUserAuthorized = (currentUser, permissionsToCheck) => {
     ? isActive && hasPermissionToPostListings(currentUser)
     : isActive;
 };
+
+/**
+ * Check if currentUser has permission to view listings on a private marketplace.
+ *
+ * @param {Object} currentUser API entity
+ * @returns {Boolean} true if currentUser has permission to view listings on a private marketplace.
+ */
+export const hasPermissionToViewListings = currentUser => {
+  // TODO add logic
+  return false;
+
+  // if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
+  //   console.warn(
+  //     '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.'
+  //   );
+  // }
+  // return currentUser?.effectivePermissionSet?.attributes?.postListings === 'permission/allow';
+};
