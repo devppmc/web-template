@@ -18,9 +18,10 @@ import {
   LISTING_PAGE_PARAM_TYPE_EDIT,
   createSlug,
   NO_ACCESS_PAGE_USER_PENDING_APPROVAL,
+  NO_ACCESS_PAGE_VIEW_LISTINGS,
 } from '../../util/urlHelpers';
 import { isErrorUserPendingApproval, isForbiddenError } from '../../util/errors.js';
-import { isUserAuthorized } from '../../util/userHelpers.js';
+import { hasPermissionToViewListings, isUserAuthorized } from '../../util/userHelpers.js';
 import { convertMoneyToNumber } from '../../util/currency';
 import {
   ensureListing,
@@ -485,7 +486,8 @@ const EnhancedListingPage = props => {
 
   const showListingError = props.showListingError;
   const isVariant = props.params?.variant?.length > 0;
-  if (isForbiddenError(showListingError) && !isVariant) {
+  const currentUser = props.currentUser;
+  if (isForbiddenError(showListingError) && !isVariant && !currentUser) {
     // This can happen if private marketplace mode is active
     return (
       <NamedRedirect
@@ -495,15 +497,23 @@ const EnhancedListingPage = props => {
     );
   }
 
-  const currentUser = props.currentUser;
   const isPrivateMarketplace = config.accessControl.marketplace.private === true;
   const isUnauthorizedUser = currentUser && !isUserAuthorized(currentUser);
+  const hasNoViewingRights = currentUser && !hasPermissionToViewListings(currentUser);
   const hasUserPendingApprovalError = isErrorUserPendingApproval(showListingError);
+
   if ((isPrivateMarketplace && isUnauthorizedUser) || hasUserPendingApprovalError) {
     return (
       <NamedRedirect
         name="NoAccessPage"
         params={{ missingAccessRight: NO_ACCESS_PAGE_USER_PENDING_APPROVAL }}
+      />
+    );
+  } else if (hasNoViewingRights && isForbiddenError(showListingError)) {
+    return (
+      <NamedRedirect
+        name="NoAccessPage"
+        params={{ missingAccessRight: NO_ACCESS_PAGE_VIEW_LISTINGS }}
       />
     );
   }
