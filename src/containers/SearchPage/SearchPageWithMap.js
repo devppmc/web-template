@@ -17,11 +17,11 @@ import {
   isOriginInUse,
   getQueryParamNames,
 } from '../../util/search';
-import { NO_ACCESS_PAGE_USER_PENDING_APPROVAL, parse } from '../../util/urlHelpers';
+import { NO_ACCESS_PAGE_USER_PENDING_APPROVAL, NO_ACCESS_PAGE_VIEW_LISTINGS, parse } from '../../util/urlHelpers';
 import { createResourceLocatorString, pathByRouteName } from '../../util/routes';
 import { propTypes } from '../../util/types';
 import { isErrorUserPendingApproval, isForbiddenError } from '../../util/errors';
-import { isUserAuthorized } from '../../util/userHelpers';
+import { hasPermissionToViewListings, isUserAuthorized } from '../../util/userHelpers';
 import { getListingsById } from '../../ducks/marketplaceData.duck';
 import { manageDisableScrolling, isScrollingDisabled } from '../../ducks/ui.duck';
 
@@ -644,12 +644,20 @@ const EnhancedSearchPage = props => {
   const { currentUser, ...restOfProps } = props;
   const isPrivateMarketplace = config.accessControl.marketplace.private === true;
   const isUnauthorizedUser = currentUser && !isUserAuthorized(currentUser);
+  const hasNoViewingRights = currentUser && !hasPermissionToViewListings(currentUser);
   const hasUserPendingApprovalError = isErrorUserPendingApproval(searchListingsError);
   if ((isPrivateMarketplace && isUnauthorizedUser) || hasUserPendingApprovalError) {
     return (
       <NamedRedirect
         name="NoAccessPage"
         params={{ missingAccessRight: NO_ACCESS_PAGE_USER_PENDING_APPROVAL }}
+      />
+    );
+  } else if (isPrivateMarketplace && hasNoViewingRights) {
+    return (
+      <NamedRedirect
+        name="NoAccessPage"
+        params={{ missingAccessRight: NO_ACCESS_PAGE_VIEW_LISTINGS }}
       />
     );
   }
