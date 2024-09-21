@@ -255,18 +255,16 @@ const EditListingWizardTab = props => {
         />
       );
     }
+    case EXTRAFEATURES: {
+      return (
+        <EditListingExtraFeaturesPanel
+          {...panelProps(EXTRAFEATURES)}
+        />
+      );
+    }
     default:
       return null;
   }
-  case EXTRAFEATURES: {
-    return (
-      <EditListingExtraFeaturesPanel
-        {...panelProps(EXTRAFEATURES)}
-      />
-    );
-  }
-  default:
-    return null;
 };
 
 EditListingWizardTab.defaultProps = {
