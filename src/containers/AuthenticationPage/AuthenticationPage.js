@@ -45,10 +45,7 @@ import LoginForm from './LoginForm/LoginForm';
 import SignupForm from './SignupForm/SignupForm';
 import EmailVerificationInfo from './EmailVerificationInfo';
 
-// We need to get ToS asset and get it rendered for the modal on this page.
 import { TermsOfServiceContent } from '../../containers/TermsOfServicePage/TermsOfServicePage';
-
-// We need to get PrivacyPolicy asset and get it rendered for the modal on this page.
 import { PrivacyPolicyContent } from '../../containers/PrivacyPolicyPage/PrivacyPolicyPage';
 
 import NotFoundPage from '../NotFoundPage/NotFoundPage';
@@ -56,30 +53,23 @@ import NotFoundPage from '../NotFoundPage/NotFoundPage';
 import { TOS_ASSET_NAME, PRIVACY_POLICY_ASSET_NAME } from './AuthenticationPage.duck';
 
 import css from './AuthenticationPage.module.css';
-import { FacebookLogo, GoogleLogo } from './socialLoginLogos';
+import { FacebookLogo, GoogleLogo, OutsetaLogo } from './socialLoginLogos';
 
-// Social login buttons are needed by AuthenticationForms
 export const SocialLoginButtonsMaybe = props => {
   const routeConfiguration = useRouteConfiguration();
-  const { isLogin, showFacebookLogin, showGoogleLogin, from, userType } = props;
-  const showSocialLogins = showFacebookLogin || showGoogleLogin;
+  const { isLogin, showFacebookLogin, showGoogleLogin, showOutsetaLogin, from, userType } = props;
+  const showSocialLogins = showFacebookLogin || showGoogleLogin || showOutsetaLogin;
 
   const getDataForSSORoutes = () => {
     const baseUrl = apiBaseUrl();
 
-    // Default route where user is returned after successfull authentication
     const defaultReturn = pathByRouteName('LandingPage', routeConfiguration);
-
-    // Route for confirming user data before creating a new user
     const defaultConfirm = pathByRouteName('ConfirmPage', routeConfiguration);
 
     const queryParams = new URLSearchParams({
       ...(defaultReturn ? { defaultReturn } : {}),
       ...(defaultConfirm ? { defaultConfirm } : {}),
-      // Route where the user should be returned after authentication
-      // This is used e.g. with EditListingPage and ListingPage
       ...(from ? { from } : {}),
-      // The preselected userType needs to be saved over the visit to identity provider's service
       ...(userType ? { userType } : {}),
     });
 
@@ -94,6 +84,11 @@ export const SocialLoginButtonsMaybe = props => {
   const authWithGoogle = () => {
     const { baseUrl, queryParams } = getDataForSSORoutes();
     window.location.href = `${baseUrl}/api/auth/google?${queryParams}`;
+  };
+
+  const authWithOutseta = () => {
+    const { baseUrl, queryParams } = getDataForSSORoutes();
+    window.location.href = `${baseUrl}/api/auth/outseta?${queryParams}`;
   };
 
   return showSocialLogins ? (
@@ -129,6 +124,19 @@ export const SocialLoginButtonsMaybe = props => {
           </SocialLoginButton>
         </div>
       ) : null}
+
+      {showOutsetaLogin ? (
+        <div className={css.socialButtonWrapper}>
+          <SocialLoginButton onClick={() => authWithOutseta()}>
+            <span className={css.buttonIcon}>{OutsetaLogo}</span>
+            {isLogin ? (
+              <FormattedMessage id="AuthenticationPage.loginWithOutseta" />
+            ) : (
+              <FormattedMessage id="AuthenticationPage.signupWithOutseta" />
+            )}
+          </SocialLoginButton>
+        </div>
+      ) : null}
     </div>
   ) : null;
 };
@@ -148,12 +156,12 @@ const getNonUserFieldParams = (values, userFieldConfigs) => {
   }, {});
 };
 
-// Tabs for SignupForm and LoginForm
 export const AuthenticationForms = props => {
   const {
     isLogin,
     showFacebookLogin,
     showGoogleLogin,
+    showOutsetaLogin,
     userType,
     from,
     submitLogin,
@@ -280,15 +288,13 @@ export const AuthenticationForms = props => {
         isLogin={isLogin}
         showFacebookLogin={showFacebookLogin}
         showGoogleLogin={showGoogleLogin}
+        showOutsetaLogin={showOutsetaLogin}
         {...fromMaybe}
         {...userTypeMaybe}
       />
     </div>
   );
 };
-
-// Form for confirming information from IdP (e.g. Facebook)
-// This is shown before new user is created to Marketplace API
 const ConfirmIdProviderInfoForm = props => {
   const {
     userType,
@@ -318,16 +324,12 @@ const ConfirmIdProviderInfoForm = props => {
 
     const displayNameMaybe = displayName ? { displayName: displayName.trim() } : {};
 
-    // Pass email, fistName or lastName to Marketplace API only if user has edited them
-    // and they can't be fetched directly from idp provider (e.g. Facebook)
-
     const authParams = {
       ...(newEmail !== email && { email: newEmail }),
       ...(newFirstName !== firstName && { firstName: newFirstName }),
       ...(newLastName !== lastName && { lastName: newLastName }),
     };
 
-    // Pass other values as extended data according to user field configuration
     const extendedDataMaybe = !isEmpty(rest)
       ? {
           publicData: {
@@ -339,7 +341,6 @@ const ConfirmIdProviderInfoForm = props => {
           },
           protectedData: {
             ...pickUserFieldsData(rest, 'protected', userType, userFields),
-            // If the confirm form has any additional values, pass them forward as user's protected data
             ...getNonUserFieldParams(rest, userFields),
           },
         }
@@ -397,6 +398,7 @@ export const AuthenticationOrConfirmInfoForm = props => {
     from,
     showFacebookLogin,
     showGoogleLogin,
+    showOutsetaLogin,
     submitLogin,
     submitSignup,
     submitSingupWithIdp,
@@ -424,6 +426,7 @@ export const AuthenticationOrConfirmInfoForm = props => {
       isLogin={isLogin}
       showFacebookLogin={showFacebookLogin}
       showGoogleLogin={showGoogleLogin}
+      showOutsetaLogin={showOutsetaLogin}
       userType={userType}
       from={from}
       loginError={loginError}
@@ -433,7 +436,7 @@ export const AuthenticationOrConfirmInfoForm = props => {
       authInProgress={authInProgress}
       submitSignup={submitSignup}
       termsAndConditions={termsAndConditions}
-    ></AuthenticationForms>
+    />
   );
 };
 
@@ -456,14 +459,11 @@ export const AuthenticationPageComponent = props => {
   const config = useConfiguration();
 
   useEffect(() => {
-    // Remove the autherror cookie once the content is saved to state
-    // because we don't want to show the error message e.g. after page refresh
     if (authError) {
       Cookies.remove('st-autherror');
     }
   }, []);
 
-  // On mobile, it's better to scroll to top.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [tosModalOpen, privacyModalOpen]);
@@ -492,9 +492,6 @@ export const AuthenticationPageComponent = props => {
     tosFetchError,
   } = props;
 
-  // History API has potentially state tied to this route
-  // We have used that state to store previous URL ("from"),
-  // so that use can be redirected back to that page after authentication.
   const locationFrom = location.state?.from || null;
   const authinfoFrom = authInfo?.from || null;
   const from = locationFrom || authinfoFrom || null;
@@ -512,13 +509,8 @@ export const AuthenticationPageComponent = props => {
   const currentUserLoaded = !!user.id;
   const isLogin = tab === 'login';
 
-  // We only want to show the email verification dialog in the signup
-  // tab if the user isn't being redirected somewhere else
-  // (i.e. `from` is present). We must also check the `emailVerified`
-  // flag only when the current user is fully loaded.
   const showEmailVerification = !isLogin && currentUserLoaded && !user.attributes.emailVerified;
 
-  // Already authenticated, redirect away from auth page
   if (isAuthenticated && from) {
     return <Redirect to={from} />;
   } else if (isAuthenticated && currentUserLoaded && !showEmailVerification) {
@@ -590,6 +582,7 @@ export const AuthenticationPageComponent = props => {
               from={from}
               showFacebookLogin={!!process.env.REACT_APP_FACEBOOK_APP_ID}
               showGoogleLogin={!!process.env.REACT_APP_GOOGLE_CLIENT_ID}
+              showOutsetaLogin={!!process.env.REACT_APP_OUTSETA_CLIENT_ID}
               submitLogin={submitLogin}
               submitSignup={submitSignup}
               submitSingupWithIdp={submitSingupWithIdp}
@@ -667,32 +660,20 @@ AuthenticationPageComponent.propTypes = {
   scrollingDisabled: bool.isRequired,
   signupError: propTypes.error,
   confirmError: propTypes.error,
-
   submitLogin: func.isRequired,
   submitSignup: func.isRequired,
   tab: oneOf(['login', 'signup', 'confirm']),
-
   sendVerificationEmailInProgress: bool.isRequired,
   sendVerificationEmailError: propTypes.error,
   onResendVerificationEmail: func.isRequired,
   onManageDisableScrolling: func.isRequired,
-
-  // to fetch privacy-policy page asset
-  // which is shown in modal
   privacyAssetsData: object,
   privacyFetchInProgress: bool,
   privacyFetchError: propTypes.error,
-
-  // to fetch terms-of-service page asset
-  // which is shown in modal
   tosAssetsData: object,
   tosFetchInProgress: bool,
   tosFetchError: propTypes.error,
-
-  // from withRouter
   location: shape({ state: object }).isRequired,
-
-  // from injectIntl
   intl: intlShape.isRequired,
 };
 

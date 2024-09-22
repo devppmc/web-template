@@ -81,3 +81,10 @@ router.get('/auth/google', authenticateGoogle);
 router.get('/auth/google/callback', authenticateGoogleCallback);
 
 module.exports = router;
+
+const { authenticateOutseta, authenticateOutsetaCallback } = require('./api/auth/outseta');
+
+// ... existing code ...
+
+router.get('/auth/outseta', authenticateOutseta);
+router.get('/auth/outseta/callback', authenticateOutsetaCallback);
