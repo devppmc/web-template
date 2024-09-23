@@ -35,3 +35,11 @@ export const GoogleLogo = (
     </g>
   </svg>
 );
+
+// This is a placeholder for the Outseta logo. Replace this with the official Outseta logo when available.
+export const OutsetaLogo = (
+  <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+    <rect width="20" height="20" fill="#5C6AC4" />
+    <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="#FFFFFF" fontSize="14">O</text>
+  </svg>
+);

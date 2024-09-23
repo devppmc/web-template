@@ -33,6 +33,7 @@ const bodyParser = require('body-parser');
 const enforceSsl = require('express-enforces-ssl');
 const path = require('path');
 const passport = require('passport');
+const session = require('express-session');
 
 const auth = require('./auth');
 const apiRouter = require('./apiRouter');
@@ -162,11 +163,23 @@ if (!dev) {
   }
 }
 
+// Add session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 // Initialize Passport.js  (http://www.passportjs.org/)
 // Passport is authentication middleware for Node.js
 // We use passport to enable authenticating with
 // a 3rd party identity provider (e.g. Facebook or Google)
 app.use(passport.initialize());
+app.use(passport.session());
 
 // Server-side routes that do not render the application
 app.use('/api', apiRouter);
